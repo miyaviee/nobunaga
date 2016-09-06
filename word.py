@@ -151,7 +151,7 @@ class Analysis(object):
             res['message'] = 'よく知っておるな'
             return res
 
-        res['message'] = 'それは・・・%sだ' % data[key]
+        res['message'] = 'それは・・・%sだ' % data[key].encode('utf-8')
         return res
 
     def forget(self, parsed):
