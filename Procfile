@@ -1,1 +1,1 @@
-web: python app.py 0.0.0.0:5000
+web: python app.py --host=0.0.0.0
