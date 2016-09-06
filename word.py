@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from janome.tokenizer import Tokenizer
 from pymongo import MongoClient
 import re
