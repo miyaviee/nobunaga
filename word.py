@@ -98,6 +98,11 @@ class Analysis(object):
             data['object_type'] = parsed[1]['type']
             data[parsed[2]['type']] = parsed[2]['value']
 
+            know = self.db.word.find_one(data)
+            if know is not None:
+                res['message'] = '知っておるわ'
+                return res
+
             self.db.word.insert_one(data)
         except IndexError:
             res['message'] = '何が言いたいのだ'
