@@ -2,11 +2,12 @@
 
 from flask import Flask, jsonify, request
 from word import Analysis
+from pymongo import MongoClient
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
-@app.route('/', methods = ['POST', 'DELETE'])
+@app.route('/', methods = ['GET', 'POST', 'DELETE'])
 @app.route('/<message>', methods = ['GET'])
 def index(message = None):
     brain = Analysis()

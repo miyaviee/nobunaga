@@ -6,7 +6,7 @@ import sys
 class Analysis(object):
 
     def __init__(self):
-        self.db = MongoClient('localhost', 27017).test
+        self.db = MongoClient('mongodb://heroku_12x9l8h7:9n1fpsesiu2crg1pjo8gunep7p@ds019856.mlab.com:19856/heroku_12x9l8h7').heroku_12x9l8h7
         self.t = Tokenizer()
 
     def parse(self, word):
