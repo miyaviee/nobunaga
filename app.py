@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, request
 from word import Analysis
 from pymongo import MongoClient
+import os
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -28,4 +29,5 @@ def index(message = None):
     return jsonify(res)
 
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host = '0.0.0.0', port = port)
