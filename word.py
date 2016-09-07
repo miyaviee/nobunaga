@@ -29,10 +29,12 @@ class Analysis(object):
                         continue
 
                 if re.search(u'ドコ', token.reading):
+                    del parsed['object']
                     parsed['object_type'] = 'place'
                     continue
 
                 if re.search(u'ソコ', token.reading):
+                    del parsed['object']
                     parsed['object_type'] = 'place'
                     continue
 
@@ -56,12 +58,12 @@ class Analysis(object):
 
                 if re.search(u'地域', token.part_of_speech):
                     if re.search(token.surface + u'(に|で|へ)', word):
-                        parsed['object'] = tmp
+                        parsed['object'] = token.surface
                         parsed['object_type'] = 'place'
                     continue
 
-                parsed['object'] = tmp
-                parsed['object_type'] = 'place'
+                parsed['object'] = token.surface
+                parsed['object_type'] = 'etc'
                 continue
 
             if re.search(u'名詞', token.part_of_speech):
