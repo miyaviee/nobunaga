@@ -89,7 +89,7 @@ class Analysis(object):
         if len(parsed) == 2:
             parsed.insert(0, {'type': 'person', 'value': '織田信長'})
 
-        res = {'err': False}
+        res = {'error': False}
 
         try:
             data['subject'] = parsed[0]['value']
@@ -116,7 +116,7 @@ class Analysis(object):
         if len(parsed) == 2:
             parsed.insert(0, {'type': 'person', 'value': u'織田信長'})
 
-        res = {'err': False}
+        res = {'error': False}
 
         try:
             if parsed[0]['value'] != u'織田信長':
@@ -146,7 +146,7 @@ class Analysis(object):
 
         data = self.db.word.find_one(query)
         if data is None:
-            res['err'] = True
+            res['error'] = True
             res['message'] = u'うっ！頭が・・・思い出せぬ・・・'
             return res
 
@@ -160,5 +160,5 @@ class Analysis(object):
         return res
 
     def forget(self, parsed):
-        res = {'err': False}
+        res = {'error': False}
         return res
