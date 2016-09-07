@@ -100,26 +100,26 @@ class Analysis(object):
 
             know = self.db.word.find_one(data)
             if know is not None:
-                res['message'] = '知っておるわ'
+                res['message'] = u'知っておるわ'
                 return res
 
             self.db.word.insert_one(data)
         except IndexError:
-            res['message'] = '何が言いたいのだ'
+            res['message'] = u'何が言いたいのだ'
             return res
 
-        res['message'] = '思い出したぞ・・・'
+        res['message'] = u'思い出したぞ・・・'
         return res
 
     def answer(self, parsed):
         query = {}
         if len(parsed) == 2:
-            parsed.insert(0, {'type': 'person', 'value': '織田信長'})
+            parsed.insert(0, {'type': 'person', 'value': u'織田信長'})
 
         res = {'err': False}
 
         try:
-            if parsed[0]['value'] != '織田信長':
+            if parsed[0]['value'] != u'織田信長':
                 parsed[0], parsed[1] = parsed[1], parsed[0]
 
             if parsed[0]['value'] != 'search':
@@ -141,22 +141,22 @@ class Analysis(object):
             else:
                 key = parsed[2]['type']
         except IndexError:
-            res['message'] = '何が言いたいのだ'
+            res['message'] = u'何が言いたいのだ'
             return res
 
         data = self.db.word.find_one(query)
         if data is None:
             res['err'] = True
-            res['message'] = 'うっ！頭が・・・思い出せぬ・・・'
+            res['message'] = u'うっ！頭が・・・思い出せぬ・・・'
             return res
 
         try:
             _var = key
         except NameError:
-            res['message'] = 'よく知っておるな'
+            res['message'] = u'よく知っておるな'
             return res
 
-        res['message'] = 'それは・・・%sだ' % data[key]
+        res['message'] = u'それは・・・%sだ' % data[key]
         return res
 
     def forget(self, parsed):
