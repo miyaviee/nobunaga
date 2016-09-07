@@ -29,12 +29,14 @@ class Analysis(object):
                         continue
 
                 if re.search(u'ドコ', token.reading):
-                    del parsed['object']
+                    if 'object' in parsed:
+                        del parsed['object']
                     parsed['object_type'] = 'place'
                     continue
 
                 if re.search(u'ソコ', token.reading):
-                    del parsed['object']
+                    if 'object' in parsed:
+                        del parsed['object']
                     parsed['object_type'] = 'place'
                     continue
 
