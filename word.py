@@ -3,148 +3,159 @@
 from janome.tokenizer import Tokenizer
 from pymongo import MongoClient
 import re
-import sys
+import os
 
 class Analysis(object):
 
     def __init__(self):
-        self.db = MongoClient('mongodb://heroku_8n89r7k9:hh2snov5cfjiqn839prs0v56kq@ds019956.mlab.com:19956/heroku_8n89r7k9').heroku_8n89r7k9
+        if os.environ.get('MONGODB_URI'):
+            self.db = MongoClient(os.environ.get('MONGODB_URI')).heroku_8n89r7k9
+        else:
+            self.db = MongoClient().test
         self.t = Tokenizer()
 
     def parse(self, word):
         tmp = ''
-        parsed = []
+        parsed = {}
         for token in self.t.tokenize(word):
             if re.search(u'代名詞', token.part_of_speech):
                 if re.search(u'ダレ', token.reading):
-                    if re.search(token.surface + u'(が|は)', word):
-                        parsed.append({'type': 'person', 'value': 'search'})
+                    if re.search(token.surface + u'(が|に)', word):
+                        parsed['subject_type'] = 'person'
                         continue
 
-                    if re.search(token.surface + u'(を|に)', word):
-                        parsed.append({'type': 'person', 'value': 'search'})
+                    if re.search(token.surface + u'(を|は)', word):
+                        parsed['object_type'] = 'person'
                         continue
 
                 if re.search(u'ドコ', token.reading):
-                    parsed.append({'type': 'place', 'value': 'search'})
+                    parsed['object_type'] = 'place'
                     continue
 
                 if re.search(u'ソコ', token.reading):
-                    parsed.append({'type': 'place', 'value': 'search'})
+                    parsed['object_type'] = 'place'
                     continue
 
 
             if re.search(u'固有名詞', token.part_of_speech):
                 if re.search(u'人名', token.part_of_speech):
                     tmp += token.surface
-                    if re.search(u'人名,名', token.part_of_speech):
-                        parsed.append({'type': 'person', 'value': tmp})
+                    if re.search(token.surface + u'(が|に)', word):
+                        if 'subject' in parsed:
+                            parsed['object'] = tmp
+                            parsed['object_type'] = 'person'
+                            continue
+
+                        parsed['subject'] = tmp
+                        parsed['subject_type'] = 'person'
+
+                    if re.search(token.surface + u'(を|は)', word):
+                        parsed['object'] = tmp
+                        parsed['object_type'] = 'person'
                     continue
 
                 if re.search(u'地域', token.part_of_speech):
-                    parsed.append({'type': 'place', 'value': token.surface})
+                    if re.search(token.surface + u'(に|で|へ)', word):
+                        parsed['object'] = tmp
+                        parsed['object_type'] = 'place'
                     continue
 
-                parsed.append({'type': 'place', 'value': token.surface})
+                parsed['object'] = tmp
+                parsed['object_type'] = 'place'
                 continue
 
             if re.search(u'名詞', token.part_of_speech):
                 if re.search(u'ナニ', token.reading):
-                    tmp = 'search'
+                    if re.search(token.surface + u'(で)', token.part_of_speech):
+                        parsed['object_type'] = 'etc'
+                        tmp = ''
                     continue
 
                 if re.search(u'ナン', token.reading):
-                    tmp = 'search'
+                    if re.search(token.surface + u'(で)', token.part_of_speech):
+                        parsed['object_type'] = 'etc'
+                        tmp = ''
                     continue
 
                 if re.search(u'名詞,接尾', token.part_of_speech):
                     if token.reading == 'ネン':
                         if re.search(u'^\d+$', tmp):
                             tmp += token.surface
-                        parsed.append({'type': 'year', 'value': tmp})
+                            parsed['object'] = tmp
+                        parsed['object_type'] = 'year'
 
                     if token.reading == 'ツキ':
                         if re.search(u'^\d+$', tmp):
                             tmp += token.surface
-                        parsed.append({'type': 'month', 'value': tmp})
+                            parsed['object'] = tmp
+                        parsed['object_type'] = 'month'
 
                     if token.reading == '日':
                         if re.search(u'^\d+$', tmp):
                             tmp += token.surface
-                        parsed.append({'type': 'day', 'value': tmp})
+                            parsed['object'] = tmp
+                        parsed['object_type'] = 'day'
 
                 tmp = token.surface
                 continue
 
             if re.search(u'動詞', token.part_of_speech):
-                parsed.append({'type': 'verb', 'value': token.base_form})
+                parsed['verb'] = token.base_form
                 break
 
             tmp = ''
+
+        if 'subject_type' not in parsed:
+            parsed['subject'] = '織田信長'
+            parsed['subject_type'] = 'person'
+
+        if 'object_type' not in parsed:
+            parsed['object'] = '織田信長'
+            parsed['object_type'] = 'person'
 
         return parsed
 
     def learn(self, parsed):
         data = {}
-        if len(parsed) == 2:
-            parsed.insert(0, {'type': 'person', 'value': '織田信長'})
-
         res = {'error': False}
 
-        try:
-            data['subject'] = parsed[0]['value']
-            data['subject_type'] = parsed[0]['type']
-            data['object'] = parsed[1]['value']
-            data['object_type'] = parsed[1]['type']
-            data[parsed[2]['type']] = parsed[2]['value']
-
-            know = self.db.word.find_one(data)
-            if know is not None:
-                res['message'] = u'知っておるわ'
-                return res
-
-            self.db.word.insert_one(data)
-        except IndexError:
+        if 'subject' not in parsed or 'object' not in parsed or 'verb' not in parsed:
             res['message'] = u'何が言いたいのだ'
             return res
+
+        if re.search(u'信長', parsed['subject']):
+            parsed['subject'] = '織田信長'
+
+        if re.search(u'信長', parsed['object']):
+            parsed['object'] = '織田信長'
+
+        know = self.db.word.find_one(parsed)
+        if know is not None:
+            res['message'] = u'知っておるわ'
+            return res
+
+        self.db.word.insert_one(parsed)
 
         res['message'] = u'思い出したぞ・・・'
         return res
 
     def answer(self, parsed):
-        query = {}
-        if len(parsed) == 2:
-            parsed.insert(0, {'type': 'person', 'value': u'織田信長'})
-
         res = {'error': False}
 
-        try:
-            if parsed[0]['value'] != u'織田信長':
-                parsed[0], parsed[1] = parsed[1], parsed[0]
-
-            if parsed[0]['value'] != 'search':
-                query['subject'] = parsed[0]['value']
-            else:
-                key = 'subject'
-
-            query['subject_type'] = parsed[0]['type']
-
-            if parsed[1]['value'] != 'search':
-                query['object'] = parsed[1]['value']
-            else:
-                key = 'object'
-
-            query['object_type'] = parsed[1]['type']
-
-            if parsed[2]['value'] != 'search':
-                query[parsed[2]['type']] = parsed[2]['value']
-            else:
-                key = parsed[2]['type']
-        except IndexError:
+        if 'subject_type' not in parsed and 'object_type' not in parsed:
             res['message'] = u'何が言いたいのだ'
             return res
 
-        data = self.db.word.find_one(query)
+        if 'subject' not in parsed:
+            key = 'subject'
+
+        if 'object' not in parsed:
+            key = 'object'
+
+        if 'verb' not in parsed:
+            key = 'verb'
+
+        data = self.db.word.find_one(parsed)
         if data is None:
             res['error'] = True
             res['message'] = u'うっ！頭が・・・思い出せぬ・・・'

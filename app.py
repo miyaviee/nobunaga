@@ -2,11 +2,14 @@
 
 from flask import Flask, jsonify, request
 from word import Analysis
-from pymongo import MongoClient
 import os
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+
+@app.route("/favicon.ico")
+def favicon():
+    return app.send_static_file("favicon.ico")
 
 @app.route('/', methods = ['POST', 'DELETE'])
 @app.route('/<message>', methods = ['GET'])
