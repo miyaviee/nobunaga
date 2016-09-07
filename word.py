@@ -98,6 +98,10 @@ class Analysis(object):
                             parsed['object'] = tmp
                         parsed['object_type'] = 'day'
 
+                if re.search(u'形容動詞語幹', token.part_of_speech):
+                    parsed['verb'] = token.base_form
+                    break
+
                 tmp = token.surface
                 continue
 
