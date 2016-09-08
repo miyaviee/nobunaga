@@ -32,6 +32,7 @@ class Analysis(object):
                 continue
 
             parsed[token.part_of_speech] = token.surface
+            print(parsed)
 
         return parsed
 
@@ -76,7 +77,7 @@ class Analysis(object):
         if len(value) == 2:
             value.remove(data['word'])
             word = ''.join(value)
-            if word.isdigit():
+            if word.isdigit() or not word:
                 res['message'] = data['word']
                 return res
 
