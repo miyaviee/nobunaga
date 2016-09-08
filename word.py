@@ -31,8 +31,7 @@ class Analysis(object):
                     del parsed['word']
                 continue
 
-            parsed[token.part_of_speech] = token.surface
-            print(parsed)
+            parsed[token.surface] = token.part_of_speech
 
         return parsed
 
@@ -64,18 +63,16 @@ class Analysis(object):
         del data['_id']
 
         value = []
-        for v in data.values():
-            if v not in parsed.values():
+        for v in data.keys():
+            if v not in parsed.keys():
                 value.append(v)
 
-        try:
-            _var = value
-        except:
+        if len(value) == 0:
             res['message'] = 'よく知っておるな'
             return res
 
         if len(value) == 2:
-            value.remove(data['word'])
+            value.remove('word')
             word = ''.join(value)
             if word.isdigit() or not word:
                 res['message'] = data['word']
