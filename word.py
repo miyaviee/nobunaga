@@ -18,17 +18,10 @@ class Analysis(object):
         word = re.sub(u'(織田)?信長は', '', word)
         parsed = {'word': word}
         for token in self.t.tokenize(word):
-            if re.search(u'終助詞|記号', token.part_of_speech):
-                continue
-
-            if re.search(u'代名詞|副詞', token.part_of_speech):
-                if 'word' in parsed:
-                    del parsed['word']
+            if re.search(u'終助詞|記号|代名詞|副詞|連体詞|副助詞', token.part_of_speech):
                 continue
 
             if re.search(u'ナニ|ナン', token.reading):
-                if 'word' in parsed:
-                    del parsed['word']
                 continue
 
             parsed[token.surface] = token.part_of_speech
@@ -54,8 +47,12 @@ class Analysis(object):
     def answer(self, parsed):
         res = {'error': False}
 
+        if 'word' in parsed:
+            del parsed['word']
+
         data = self.db.word.find_one(parsed)
         if data is None:
+
             res['error'] = True
             res['message'] = u'うっ！頭が・・・思い出せぬ・・・'
             return res
