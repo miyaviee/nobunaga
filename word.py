@@ -76,7 +76,7 @@ class Analysis(object):
         results = self.db.word.aggregate([
             {'$match': {'$or': query}},
             {'$group': {'_id': '$origin', 'count': {'$sum': 1}}},
-            {'$sort': {'count': 1}}
+            {'$sort': {'count': -1}}
         ])
 
         try:
