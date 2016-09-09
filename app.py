@@ -16,18 +16,18 @@ def favicon():
 def index(message = None):
     brain = Analysis()
     if request.method == 'GET':
-        parsed = brain.parse(message)
-        res = brain.answer(parsed)
+        tokens = brain.parse(message)
+        res = brain.answer(tokens)
 
     if request.method == 'POST':
         message = request.form.get('message')
-        parsed = brain.parse(message)
-        res = brain.learn(parsed)
+        tokens = brain.parse(message)
+        res = brain.learn(tokens)
 
     if request.method == 'DELETE':
         message = request.form.get('message')
-        parsed = brain.parse(message)
-        res = brain.forget(parsed)
+        tokens = brain.parse(message)
+        res = brain.forget(tokens)
 
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')

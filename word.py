@@ -56,7 +56,7 @@ class Analysis(object):
                 error = False
                 continue
 
-            if re.search(u'ナニ|ナン', token.reading):
+            if re.search(u'ナニ|ナン|イツ', token.reading):
                 error = False
                 continue
 
@@ -73,8 +73,8 @@ class Analysis(object):
                 'message': u'何が言いたいのだ',
             }
 
-        result = self.db.word.find({'$or': query}).distinct('origin')
-        if result is None:
+        results = self.db.word.find({'$or': query})
+        if len(list(results)) < 4:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
@@ -82,7 +82,7 @@ class Analysis(object):
 
         return {
             'error': False,
-            'message': result.pop()
+            'message': results.distinct('origin').pop()
         }
 
 
