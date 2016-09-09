@@ -73,8 +73,15 @@ class Analysis(object):
                 'message': u'何が言いたいのだ',
             }
 
-        results = self.db.word.find({'$or': query})
-        if len(list(results)) < 4:
+        results = self.db.word.aggregate([
+            {'$match': {'$or': query}},
+            {'$group': {'_id': '$origin', 'count': {'$sum': 1}}},
+            {'$sort': {'count': 1}}
+        ])
+
+        try:
+            result = results.next()
+        except:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
@@ -82,7 +89,7 @@ class Analysis(object):
 
         return {
             'error': False,
-            'message': results.distinct('origin').pop()
+            'message': result['_id'],
         }
 
 
