@@ -15,7 +15,6 @@ class Analysis(object):
         self.t = Tokenizer()
 
     def parse(self, word):
-        word = re.sub(u'(織田)?信長は', '', word)
         parsed = {'word': word}
         for token in self.t.tokenize(word):
             if re.search(u'終助詞|記号', token.part_of_speech):
