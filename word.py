@@ -82,6 +82,9 @@ class Analysis(object):
         try:
             result = results.next()
         except:
+            error = True
+
+        if error or result['count'] < 4:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
