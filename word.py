@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from janome.tokenizer import Tokenizer
-from pymongo import MongoClient
+from urllib.parse import urlparse
+import pymysql.cursors
 import re
 import os
 
 class Analysis(object):
     def __init__(self):
-        if os.environ.get('MONGODB_URI'):
-            self.db = MongoClient(os.environ.get('MONGODB_URI')).heroku_8n89r7k9
-        else:
-            self.db = MongoClient().test
+        uri = urlparse(os.environ.get('CLEARDB_DATABASE_URL'))
+        self.db = pymysql.connect(host=uri.hostname,
+                                  user=uri.username,
+                                  password=uri.password,
+                                  db=uri.path[1:],
+                                  charset='utf8',
+                                  cursorclass=pymysql.cursors.DictCursor)
+
         self.t = Tokenizer()
 
     def parse(self, word):
@@ -18,24 +23,31 @@ class Analysis(object):
         return self.t.tokenize(word)
 
     def learn(self, tokens):
-        error = True
-        for token in tokens:
-            if re.search(u'代名詞', token.part_of_speech):
-                return {
-                    'error': error,
-                    'message': u'何が言いたいのだ',
-                }
+        with self.db.cursor() as cur:
+            error = True
+            for token in tokens:
+                if re.search(u'代名詞', token.part_of_speech):
+                    return {
+                        'error': error,
+                        'message': u'何が言いたいのだ',
+                    }
 
-            data = {
-                'keyword': token.surface,
-                'type': token.part_of_speech,
-                'origin': self.word,
-            }
+                cur.execute('SELECT * '
+                            'FROM nobunaga '
+                            'WHERE keyword = %s '
+                            'AND type = %s '
+                            'AND origin = %s',
+                            (token.surface, token.part_of_speech, self.word))
 
-            result = self.db.word.find_one(data)
-            if result is None:
-                error = False
-                self.db.word.insert_one(data)
+                if cur.fetchone() is None:
+                    error = False
+                    sql = 'INSERT INTO nobunaga (keyword, type, origin) VALUES (%s, %s, %s)'
+                    cur.execute('INSERT INTO nobunaga ('
+                                'keyword, type, origin) '
+                                'VALUES (%s, %s, %s)',
+                                (token.surface, token.part_of_speech, self.word))
+
+        self.db.commit()
 
         if error:
             return {
@@ -49,7 +61,10 @@ class Analysis(object):
         }
 
     def answer(self, tokens):
-        query = []
+        query = {
+            'string': [],
+            'data': [],
+        }
         error = True
         for token in tokens:
             if re.search(u'代名詞', token.part_of_speech):
@@ -60,12 +75,9 @@ class Analysis(object):
                 error = False
                 continue
 
-            data = {
-                'keyword': token.surface,
-                'type': token.part_of_speech,
-            }
-
-            query.append(data)
+            query['string'].append('keyword = %s AND type = %s')
+            query['data'].append(token.surface)
+            query['data'].append(token.part_of_speech)
 
         if error:
             return {
@@ -73,18 +85,18 @@ class Analysis(object):
                 'message': u'何が言いたいのだ',
             }
 
-        results = self.db.word.aggregate([
-            {'$match': {'$or': query}},
-            {'$group': {'_id': '$origin', 'count': {'$sum': 1}}},
-            {'$sort': {'count': -1}}
-        ])
+        with self.db.cursor() as cur:
+            sql = """
+            SELECT origin, COUNT(origin) as count
+            FROM nobunaga
+            WHERE %s
+            GROUP BY origin
+            """[1:-1] % ' OR '.join(query['string'])
+            cur.execute(sql, tuple(query['data']))
 
-        try:
-            result = results.next()
-        except:
-            error = True
+            result = cur.fetchone()
 
-        if error or result['count'] < 4:
+        if result is None or result['count'] < 4:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
@@ -92,7 +104,7 @@ class Analysis(object):
 
         return {
             'error': False,
-            'message': result['_id'],
+            'message': result['origin'],
         }
 
 

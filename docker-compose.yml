@@ -1,0 +1,20 @@
+version: '2'
+services:
+  api:
+    build: .
+    container_name: api
+    volumes:
+      - './:/app'
+    ports:
+      - '5000:5000'
+    links:
+      - mysql
+    environment:
+      - 'CLEARDB_DATABASE_URL=mysql://root:@mysql/revival'
+  mysql:
+    image: mysql:5.6
+    container_name: revival
+    environment:
+      - 'MYSQL_DATABASE=revival'
+      - 'MYSQL_ALLOW_EMPTY_PASSWORD=1'
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
