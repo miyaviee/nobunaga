@@ -91,6 +91,7 @@ class Analysis(object):
             FROM nobunaga
             WHERE %s
             GROUP BY origin
+            ORDER BY count DESC
             """[1:-1] % ' OR '.join(query['string'])
             cur.execute(sql, tuple(query['data']))
 
