@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, jsonify, request
-from word import Analysis
+from flaskext.mysql import MySQL
+from urllib.parse import urlparse
+from janome.tokenizer import Tokenizer
+from nobunaga import Nobunaga
 import os
 
+mysql = MySQL()
+t = Tokenizer()
+uri = urlparse(os.environ.get('CLEARDB_DATABASE_URL'))
 app = Flask(__name__)
+app.config['MYSQL_DATABASE_USER'] = uri.username
+app.config['MYSQL_DATABASE_PASSWORD'] = uri.password
+app.config['MYSQL_DATABASE_DB'] = uri.path[1:]
+app.config['MYSQL_DATABASE_HOST'] = uri.hostname
+mysql.init_app(app)
+
 app.config['JSON_AS_ASCII'] = False
 
 @app.route("/favicon.ico")
@@ -14,20 +26,20 @@ def favicon():
 @app.route('/', methods = ['POST', 'DELETE'])
 @app.route('/<message>', methods = ['GET'])
 def index(message = None):
-    brain = Analysis()
+    nobunaga = Nobunaga(mysql)
     if request.method == 'GET':
-        tokens = brain.parse(message)
-        res = brain.answer(tokens)
+        tokens = t.tokenize(message)
+        res = nobunaga.answer(tokens)
 
     if request.method == 'POST':
         message = request.form.get('message')
-        tokens = brain.parse(message)
-        res = brain.learn(tokens)
+        tokens = t.tokenize(message)
+        res = nobunaga.learn(tokens, message)
 
     if request.method == 'DELETE':
         message = request.form.get('message')
-        tokens = brain.parse(message)
-        res = brain.forget(tokens)
+        tokens = nobunaga.parse(message)
+        res = nobunaga.forget(tokens)
 
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')

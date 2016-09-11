@@ -1,28 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from janome.tokenizer import Tokenizer
-from urllib.parse import urlparse
-import pymysql.cursors
 import re
 import os
 
-class Analysis(object):
-    def __init__(self):
-        uri = urlparse(os.environ.get('CLEARDB_DATABASE_URL'))
-        self.db = pymysql.connect(host=uri.hostname,
-                                  user=uri.username,
-                                  password=uri.password,
-                                  db=uri.path[1:],
-                                  charset='utf8',
-                                  cursorclass=pymysql.cursors.DictCursor)
+class Nobunaga(object):
+    def __init__(self, driver):
+        self.db = driver.connect()
 
-        self.t = Tokenizer()
-
-    def parse(self, word):
-        self.word = word
-        return self.t.tokenize(word)
-
-    def learn(self, tokens):
+    def learn(self, tokens, word):
         with self.db.cursor() as cur:
             error = True
             for token in tokens:
@@ -37,7 +22,7 @@ class Analysis(object):
                             'WHERE keyword = %s '
                             'AND type = %s '
                             'AND origin = %s',
-                            (token.surface, token.part_of_speech, self.word))
+                            (token.surface, token.part_of_speech, word))
 
                 if cur.fetchone() is None:
                     error = False
@@ -45,7 +30,7 @@ class Analysis(object):
                     cur.execute('INSERT INTO nobunaga ('
                                 'keyword, type, origin) '
                                 'VALUES (%s, %s, %s)',
-                                (token.surface, token.part_of_speech, self.word))
+                                (token.surface, token.part_of_speech, word))
 
         self.db.commit()
 
@@ -97,7 +82,7 @@ class Analysis(object):
 
             result = cur.fetchone()
 
-        if result is None or result['count'] < 4:
+        if result is None or result[1] < 4:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
@@ -105,7 +90,7 @@ class Analysis(object):
 
         return {
             'error': False,
-            'message': result['origin'],
+            'message': result[0],
         }
 
 
