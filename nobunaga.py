@@ -82,7 +82,7 @@ class Nobunaga(object):
 
             result = cur.fetchone()
 
-        if result is None or result[1] < 4:
+        if result is None or result[1] < 3:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
