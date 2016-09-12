@@ -57,6 +57,13 @@ class Nobunaga(object):
         for token in tokens:
             if re.search(u'代名詞', token.part_of_speech):
                 error = False
+                if re.search(u'ダレ', token.reading):
+                    query['string'].append('type LIKE %s')
+                    query['data'].append('%人名%')
+
+                if re.search(u'ドコ', token.reading):
+                    query['string'].append('type LIKE %s')
+                    query['data'].append('%地域%')
                 continue
 
             if re.search(u'ナニ|ナン|ナゼ|イツ', token.reading):
@@ -97,7 +104,7 @@ class Nobunaga(object):
                 'message': u'何が言いたいのだ',
             }
 
-        if result[2] < result[1] - 2:
+        if result[2] < result[1] - 3:
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
                     target = token.surface
