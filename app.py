@@ -3,12 +3,10 @@
 from flask import Flask, jsonify, request
 from flaskext.mysql import MySQL
 from urllib.parse import urlparse
-from janome.tokenizer import Tokenizer
 from nobunaga import Nobunaga
 import os
 
 mysql = MySQL()
-t = Tokenizer()
 uri = urlparse(os.environ.get('CLEARDB_DATABASE_URL'))
 app = Flask(__name__)
 app.config['MYSQL_DATABASE_USER'] = uri.username
@@ -28,18 +26,15 @@ def favicon():
 def index(message = None):
     nobunaga = Nobunaga(mysql)
     if request.method == 'GET':
-        tokens = t.tokenize(message)
-        res = nobunaga.answer(tokens)
+        res = nobunaga.answer(message)
 
     if request.method == 'POST':
         message = request.form.get('message')
-        tokens = t.tokenize(message)
-        res = nobunaga.learn(tokens, message)
+        res = nobunaga.learn(message)
 
     if request.method == 'DELETE':
         message = request.form.get('message')
-        tokens = nobunaga.parse(message)
-        res = nobunaga.forget(tokens)
+        res = nobunaga.forget(message)
 
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')

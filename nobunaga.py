@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
+from janome.tokenizer import Tokenizer
 import re
 import os
 
 class Nobunaga(object):
     def __init__(self, driver):
+        self.t = Tokenizer()
         self.db = driver.connect()
 
-    def learn(self, tokens, word):
+    def learn(self, word):
         with self.db.cursor() as cur:
             error = True
+            tokens = self.t.tokenize(word)
             for token in tokens:
                 if re.search(u'代名詞', token.part_of_speech):
                     return {
@@ -26,11 +29,10 @@ class Nobunaga(object):
 
                 if cur.fetchone() is None:
                     error = False
-                    sql = 'INSERT INTO nobunaga (keyword, type, origin) VALUES (%s, %s, %s)'
                     cur.execute('INSERT INTO nobunaga ('
-                                'keyword, type, origin) '
-                                'VALUES (%s, %s, %s)',
-                                (token.surface, token.part_of_speech, word))
+                                'keyword, type, token_count, origin) '
+                                'VALUES (%s, %s, %s, %s)',
+                                (token.surface, token.part_of_speech, len(tokens), word))
 
         self.db.commit()
 
@@ -45,18 +47,19 @@ class Nobunaga(object):
             'message': u'思い出したぞ・・・',
         }
 
-    def answer(self, tokens):
+    def answer(self, word):
         query = {
             'string': [],
             'data': [],
         }
         error = True
+        tokens = self.t.tokenize(word)
         for token in tokens:
             if re.search(u'代名詞', token.part_of_speech):
                 error = False
                 continue
 
-            if re.search(u'ナニ|ナン|イツ', token.reading):
+            if re.search(u'ナニ|ナン|ナゼ|イツ', token.reading):
                 error = False
                 continue
 
@@ -66,7 +69,7 @@ class Nobunaga(object):
 
         with self.db.cursor() as cur:
             sql = """
-            SELECT origin, COUNT(origin) as count
+            SELECT origin, token_count, COUNT(origin) as count
             FROM nobunaga
             WHERE %s
             GROUP BY origin
@@ -76,14 +79,14 @@ class Nobunaga(object):
 
             result = cur.fetchone()
 
-        if result is None or result[1] < 3:
+        if result is None:
             return {
                 'error': True,
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
             }
 
         if error:
-            if result[1] == len(tokens) - 1:
+            if result[1] == result[2]:
                 return {
                     'error': False,
                     'message': u'よく知っておるな',
@@ -92,6 +95,25 @@ class Nobunaga(object):
             return {
                 'error': error,
                 'message': u'何が言いたいのだ',
+            }
+
+        if result[2] < result[1] - 2:
+            for token in self.t.tokenize(result[0]):
+                if re.search(u'固有名詞', token.part_of_speech):
+                    target = token.surface
+                    break
+
+            try:
+                _var = target
+            except:
+                return {
+                    'error': error,
+                    'message': u'何が知りたいのだ',
+                }
+
+            return {
+                'error': False,
+                'message': u'%sのことか？' % target,
             }
 
         return {
