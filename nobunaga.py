@@ -65,12 +65,6 @@ class Nobunaga(object):
             query['data'].append(token.surface)
             query['data'].append(token.part_of_speech)
 
-        if len(query['data']) < 6:
-            return {
-                'error': True,
-                'message': u'何が聞きたいのだ',
-            }
-
         with self.db.cursor() as cur:
             sql = """
             SELECT answer, token_count, COUNT(answer) as count
@@ -89,6 +83,20 @@ class Nobunaga(object):
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
             }
 
+        if len(tokens) < 4:
+            for token in tokens:
+                if re.search(u'代名詞', token.part_of_speech):
+                    return {
+                        'error': True,
+                        'message': u'なんのことだ？',
+                    }
+
+            if len(tokens) < result[1] - 1:
+                return {
+                    'error': True,
+                    'message': u'わからぬ',
+                }
+
         if result[2] < result[1] - 2:
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
@@ -100,7 +108,7 @@ class Nobunaga(object):
             except:
                 return {
                     'error': True,
-                    'message': u'知らんな',
+                    'message': u'何が知りたいのだ',
                 }
 
             return {
