@@ -1,0 +1,6 @@
+---
+db:
+  hostname: mysql
+  username: root
+  password:
+  database: revival

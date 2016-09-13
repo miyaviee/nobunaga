@@ -9,42 +9,36 @@ class Nobunaga(object):
         self.t = Tokenizer()
         self.db = driver.connect()
 
-    def learn(self, word):
+    def learn(self, word, answer):
         with self.db.cursor() as cur:
-            error = True
+            cur.execute('SELECT * '
+                        'FROM nobunaga '
+                        'WHERE answer = %s ',
+                        answer)
+
+            results = cur.fetchall()
+
             tokens = self.t.tokenize(word)
             for token in tokens:
-                if re.search(u'代名詞', token.part_of_speech):
-                    return {
-                        'error': error,
-                        'message': u'何が言いたいのだ',
-                    }
+                exist = False
+                for result in results:
+                    if token.surface == result[0] and token.part_of_speech == result[1]:
+                        exist = True
+                        break
 
-                cur.execute('SELECT * '
-                            'FROM nobunaga '
-                            'WHERE keyword = %s '
-                            'AND type = %s '
-                            'AND origin = %s',
-                            (token.surface, token.part_of_speech, word))
+                if exist:
+                    continue
 
-                if cur.fetchone() is None:
-                    error = False
-                    cur.execute('INSERT INTO nobunaga ('
-                                'keyword, type, token_count, origin) '
-                                'VALUES (%s, %s, %s, %s)',
-                                (token.surface, token.part_of_speech, len(tokens), word))
+                cur.execute('INSERT INTO nobunaga ('
+                            'keyword, type, token_count, answer) '
+                            'VALUES (%s, %s, %s, %s)',
+                            (token.surface, token.part_of_speech, len(tokens), answer))
 
-        self.db.commit()
-
-        if error:
-            return {
-                'error': error,
-                'message': u'知っておるわ',
-            }
+            self.db.commit()
 
         return {
             'error': False,
-            'message': u'思い出したぞ・・・',
+            'message': u'思い出したぞ',
         }
 
     def answer(self, word):
@@ -52,11 +46,9 @@ class Nobunaga(object):
             'string': [],
             'data': [],
         }
-        error = True
         tokens = self.t.tokenize(word)
         for token in tokens:
             if re.search(u'代名詞', token.part_of_speech):
-                error = False
                 if re.search(u'ダレ', token.reading):
                     query['string'].append('type LIKE %s')
                     query['data'].append('%人名%')
@@ -67,19 +59,24 @@ class Nobunaga(object):
                 continue
 
             if re.search(u'ナニ|ナン|ナゼ|イツ', token.reading):
-                error = False
                 continue
 
             query['string'].append('keyword = %s AND type = %s')
             query['data'].append(token.surface)
             query['data'].append(token.part_of_speech)
 
+        if len(query['data']) < 6:
+            return {
+                'error': True,
+                'message': u'何が聞きたいのだ',
+            }
+
         with self.db.cursor() as cur:
             sql = """
-            SELECT origin, token_count, COUNT(origin) as count
+            SELECT answer, token_count, COUNT(answer) as count
             FROM nobunaga
             WHERE %s
-            GROUP BY origin
+            GROUP BY answer
             ORDER BY count DESC
             """[1:-1] % ' OR '.join(query['string'])
             cur.execute(sql, tuple(query['data']))
@@ -92,18 +89,6 @@ class Nobunaga(object):
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
             }
 
-        if error:
-            if result[1] == result[2]:
-                return {
-                    'error': False,
-                    'message': u'よく知っておるな',
-                }
-
-            return {
-                'error': error,
-                'message': u'何が言いたいのだ',
-            }
-
         if result[2] < result[1] - 2:
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
@@ -114,8 +99,8 @@ class Nobunaga(object):
                 _var = target
             except:
                 return {
-                    'error': error,
-                    'message': u'何が知りたいのだ',
+                    'error': True,
+                    'message': u'知らんな',
                 }
 
             return {

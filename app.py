@@ -2,17 +2,17 @@
 
 from flask import Flask, jsonify, request
 from flaskext.mysql import MySQL
-from urllib.parse import urlparse
 from nobunaga import Nobunaga
-import os
+import yaml
+
+config = yaml.load(open('./config.yml', 'r'))
 
 mysql = MySQL()
-uri = urlparse(os.environ.get('CLEARDB_DATABASE_URL'))
 app = Flask(__name__)
-app.config['MYSQL_DATABASE_USER'] = uri.username
-app.config['MYSQL_DATABASE_PASSWORD'] = uri.password
-app.config['MYSQL_DATABASE_DB'] = uri.path[1:]
-app.config['MYSQL_DATABASE_HOST'] = uri.hostname
+app.config['MYSQL_DATABASE_USER'] = config['db']['username']
+app.config['MYSQL_DATABASE_PASSWORD'] = config['db']['password']
+app.config['MYSQL_DATABASE_DB'] = config['db']['database']
+app.config['MYSQL_DATABASE_HOST'] = config['db']['hostname']
 mysql.init_app(app)
 
 app.config['JSON_AS_ASCII'] = False
@@ -30,7 +30,8 @@ def index(message = None):
 
     if request.method == 'POST':
         message = request.form.get('message')
-        res = nobunaga.learn(message)
+        data = message.split('@')
+        res = nobunaga.learn(data[0], data[1])
 
     if request.method == 'DELETE':
         message = request.form.get('message')
@@ -41,5 +42,4 @@ def index(message = None):
     return response
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host = '0.0.0.0', port = port)
+    app.run(host = '0.0.0.0', port = 5000)
