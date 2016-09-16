@@ -91,13 +91,14 @@ class Nobunaga(object):
                         'message': u'なんのことだ？',
                     }
 
-            if len(tokens) < result[1] - 1:
-                return {
-                    'error': True,
-                    'message': u'何が知りたいのだ',
-                }
+        diffcount = result[1] - result[2]
+        if diffcount < 0 or 4 < diffcount:
+            return {
+                'error': True,
+                'message': u'何が知りたいのだ',
+            }
 
-        if result[2] < result[1] - 3:
+        if 2 < diffcount and diffcount < 4:
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
                     target = token.surface
