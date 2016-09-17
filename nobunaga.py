@@ -75,7 +75,8 @@ class Nobunaga(object):
 
         diff_count = result[1] - result[2]
 
-        if diff_count <= 0 or 3 <= diff_count:
+        if diff_count < 0 or 2 < diff_count:
+            return result
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
                     target = token.surface
