@@ -94,6 +94,12 @@ class Nobunaga(object):
                 'message': u'%sのことか？' % target,
             }
 
+        if diff_count == 1 and result[1] == 2:
+            return {
+                'error': True,
+                'message': u'知らぬな',
+            }
+
         return {
             'error': False,
             'message': result[0],
