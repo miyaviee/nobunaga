@@ -48,17 +48,7 @@ class Nobunaga(object):
         }
         tokens = self.t.tokenize(word)
         for token in tokens:
-            if re.search(u'代名詞', token.part_of_speech):
-                if re.search(u'ダレ', token.reading):
-                    query['string'].append('type LIKE %s')
-                    query['data'].append('%人名%')
-
-                if re.search(u'ドコ', token.reading):
-                    query['string'].append('type LIKE %s')
-                    query['data'].append('%地域%')
-                continue
-
-            if re.search(u'ナニ|ナン|ナゼ|イツ', token.reading):
+            if re.search(u'記号', token.part_of_speech):
                 continue
 
             query['string'].append('keyword = %s AND type = %s')
@@ -83,22 +73,9 @@ class Nobunaga(object):
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
             }
 
-        if len(tokens) < 4:
-            for token in tokens:
-                if re.search(u'代名詞', token.part_of_speech):
-                    return {
-                        'error': True,
-                        'message': u'なんのことだ？',
-                    }
+        diff_count = result[1] - result[2]
 
-        diffcount = result[1] - result[2]
-        if diffcount < 0 or 4 < diffcount:
-            return {
-                'error': True,
-                'message': u'何が知りたいのだ',
-            }
-
-        if 2 < diffcount and diffcount < 4:
+        if diff_count <= 0 or 3 <= diff_count:
             for token in self.t.tokenize(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
                     target = token.surface
@@ -109,17 +86,21 @@ class Nobunaga(object):
             except:
                 return {
                     'error': True,
-                    'message': u'知らんな',
+                    'message': u'何が知りたいのだ？',
                 }
 
             return {
-                'error': False,
+                'error': True,
                 'message': u'%sのことか？' % target,
             }
 
         return {
             'error': False,
             'message': result[0],
+            'debug': {
+                'token_count': result[1],
+                'hit_count': result[2],
+                'query': query,
+            },
         }
-
 
