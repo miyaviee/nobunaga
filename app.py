@@ -33,10 +33,6 @@ def index(message = None):
         data = message.split('@')
         res = nobunaga.learn(data[0], data[1])
 
-    if request.method == 'DELETE':
-        message = request.form.get('message')
-        res = nobunaga.forget(message)
-
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response

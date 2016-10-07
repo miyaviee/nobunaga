@@ -9,38 +9,6 @@ class Nobunaga(object):
         self.t = Tokenizer()
         self.db = driver.connect()
 
-    def learn(self, word, answer):
-        with self.db.cursor() as cur:
-            cur.execute('SELECT * '
-                        'FROM nobunaga '
-                        'WHERE answer = %s ',
-                        answer)
-
-            results = cur.fetchall()
-
-            tokens = self.t.tokenize(word)
-            for token in tokens:
-                exist = False
-                for result in results:
-                    if token.surface == result[0] and token.part_of_speech == result[1]:
-                        exist = True
-                        break
-
-                if exist:
-                    continue
-
-                cur.execute('INSERT INTO nobunaga ('
-                            'keyword, type, token_count, answer) '
-                            'VALUES (%s, %s, %s, %s)',
-                            (token.surface, token.part_of_speech, len(tokens), answer))
-
-            self.db.commit()
-
-        return {
-            'error': False,
-            'message': u'思い出したぞ',
-        }
-
     def answer(self, word):
         query = {
             'string': [],
