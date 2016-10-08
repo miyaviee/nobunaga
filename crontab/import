@@ -1,1 +1,0 @@
-0 3 * * * cd ~/www/api && python3 import.py
