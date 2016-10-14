@@ -121,7 +121,7 @@ class Nobunaga(object):
             sql = """
             SELECT *
             FROM log
-            ORDER BY DESC
+            ORDER BY line DESC
             """[1:-1]
             cur.execute(sql)
 
@@ -135,7 +135,7 @@ class Nobunaga(object):
             SELECT *
             FROM log
             WHERE line LIKE '%error%'
-            ORDER BY DESC
+            ORDER BY line DESC
             """[1:-1]
             cur.execute(sql)
 
