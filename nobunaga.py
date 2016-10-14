@@ -48,6 +48,7 @@ class Nobunaga(object):
 
         if diff_count == 0:
             message = result[0]
+            self.logging('info', word, message)
             return {
                 'error': False,
                 'message': result[0],
@@ -55,6 +56,7 @@ class Nobunaga(object):
 
         if diff_count < 0:
             message = u'何が知りたいのだ？'
+            self.logging('info', word, message)
             return {
                 'error': True,
                 'message': message,
@@ -70,12 +72,14 @@ class Nobunaga(object):
                 _var = target
             except:
                 message = u'何のことだ？'
+                self.logging('info', word, message)
                 return {
                     'error': True,
                     'message': message,
                 }
 
             message = u'%sのことか？' % target
+            self.logging('info', word, message)
             return {
                 'error': True,
                 'message': message,
@@ -83,12 +87,14 @@ class Nobunaga(object):
 
         if diff_count == 1 and result[1] == 2:
             message = u'知らぬな'
+            self.logging('error', word, message)
             return {
                 'error': True,
                 'message': message,
             }
 
         message = result[0]
+        self.logging('info', word, message)
         return {
             'error': False,
             'message': message,
