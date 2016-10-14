@@ -3,6 +3,7 @@
 from janome.tokenizer import Tokenizer
 import re
 import os
+import datetime
 
 class Nobunaga(object):
     def __init__(self, driver):
@@ -36,41 +37,61 @@ class Nobunaga(object):
             result = cur.fetchone()
 
         if result is None:
+            message = u'うっ！頭が・・・思い出せぬ・・・'
+            self.logging('error', word, message)
             return {
                 'error': True,
-                'message': u'うっ！頭が・・・思い出せぬ・・・',
+                'message': message,
             }
 
         diff_count = result[1] - result[2]
 
-        if diff_count < 0 or 2 < diff_count:
+        if diff_count == 0:
+            message = result[0]
+            return {
+                'error': False,
+                'message': result[0],
+            }
+
+        if diff_count < 0:
+            message = u'何が知りたいのだ？'
+            return {
+                'error': True,
+                'message': message,
+            }
+
+        if 2 < diff_count:
             for token in self.t.tokenize(result[0]):
-                if re.search(u'固有名詞', token.part_of_speech):
+                if re.search(u'名詞', token.part_of_speech):
                     target = token.surface
                     break
 
             try:
                 _var = target
             except:
+                message = u'何のことだ？'
                 return {
                     'error': True,
-                    'message': u'何が知りたいのだ？',
+                    'message': message,
                 }
 
+            message = u'%sのことか？' % target
             return {
                 'error': True,
-                'message': u'%sのことか？' % target,
+                'message': message,
             }
 
         if diff_count == 1 and result[1] == 2:
+            message = u'知らぬな'
             return {
                 'error': True,
-                'message': u'知らぬな',
+                'message': message,
             }
 
+        message = result[0]
         return {
             'error': False,
-            'message': result[0],
+            'message': message,
             'debug': {
                 'token_count': result[1],
                 'hit_count': result[2],
@@ -78,3 +99,38 @@ class Nobunaga(object):
             },
         }
 
+    def logging(self, level, word, message):
+        date = datetime.datetime.today()
+        with self.db.cursor() as cur:
+            sql = """
+            INSERT INTO log
+            VALUES (%s)
+            """[1:-1]
+            cur.execute(sql, '%s, %s, %s, %s' % (date.strftime('%Y/%m/%d %H:%M:%S'), level, word, message))
+
+        self.db.commit()
+
+    def all(self):
+        with self.db.cursor() as cur:
+            sql = """
+            SELECT *
+            FROM log
+            """[1:-1]
+            cur.execute(sql)
+
+            results = cur.fetchall()
+
+        return results
+
+    def error(self):
+        with self.db.cursor() as cur:
+            sql = """
+            SELECT *
+            FROM log
+            WHERE line LIKE '%error%'
+            """[1:-1]
+            cur.execute(sql)
+
+            results = cur.fetchall()
+
+        return results

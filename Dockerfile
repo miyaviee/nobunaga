@@ -12,6 +12,12 @@ python3-pip \
 
 RUN pip3 install --upgrade pip
 
+RUN sed -i 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/g' /etc/locale.gen
+RUN locale-gen
+
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+
 WORKDIR /app
 COPY ./requirements.txt /app/requirements.txt
 RUN pip3 install -r requirements.txt
