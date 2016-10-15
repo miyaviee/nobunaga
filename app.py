@@ -33,10 +33,11 @@ def log(word = None):
 @app.route('/<message>', methods = ['GET'])
 def index(message = None):
     nobunaga = Nobunaga(mysql)
-    if request.method == 'GET':
-        res = nobunaga.answer(message)
+    tokens = nobunaga.parse(message)
+    query = nobunaga.create_query(tokens)
+    result = nobunaga.search(query)
 
-    return json_response(res)
+    return json_response(nobunaga.answer(message, query, result))
 
 
 def json_response(res):

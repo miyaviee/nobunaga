@@ -10,12 +10,15 @@ class Nobunaga(object):
         self.t = Tokenizer()
         self.db = driver.connect()
 
-    def answer(self, word):
+    def parse(self, word):
+        return self.t.tokenize(word)
+
+    def create_query(self, tokens):
         query = {
             'string': [],
             'data': [],
         }
-        tokens = self.t.tokenize(word)
+
         for token in tokens:
             if not re.search(u'名詞', token.part_of_speech):
                 continue
@@ -24,6 +27,9 @@ class Nobunaga(object):
             query['data'].append(token.surface)
             query['data'].append(token.part_of_speech)
 
+        return query
+
+    def search(self, query):
         with self.db.cursor() as cur:
             sql = """
             SELECT answer, token_count, COUNT(answer) as count
@@ -36,6 +42,9 @@ class Nobunaga(object):
 
             result = cur.fetchone()
 
+        return result
+
+    def answer(self, word, query, result):
         if result is None:
             message = u'うっ！頭が・・・思い出せぬ・・・'
             self.logging('error', word, message)
@@ -45,7 +54,7 @@ class Nobunaga(object):
             }
 
         if result[2] < 2:
-            for token in self.t.tokenize(result[0]):
+            for token in self.parse(result[0]):
                 if re.search(u'固有名詞', token.part_of_speech):
                     target = token.surface
                     break
@@ -59,13 +68,6 @@ class Nobunaga(object):
                     'error': True,
                     'message': message,
                 }
-
-            message = u'%sのことか？' % target
-            self.logging('info', word, message)
-            return {
-                'error': True,
-                'message': message,
-            }
 
         message = result[0]
         self.logging('info', word, message)
