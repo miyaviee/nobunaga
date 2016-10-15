@@ -2,6 +2,7 @@
 import csv
 import pymysql
 import yaml
+import re
 from janome.tokenizer import Tokenizer
 
 def save(con, t, word, answer):
@@ -15,6 +16,9 @@ def save(con, t, word, answer):
 
         tokens = t.tokenize(word)
         for token in tokens:
+            if not re.search(u'名詞', token.part_of_speech):
+                continue
+
             exist = False
             for result in results:
                 if token.surface == result[0] and token.part_of_speech == result[1]:
