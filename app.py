@@ -39,7 +39,6 @@ def index(message = None):
 
     return json_response(nobunaga.answer(message, query, result))
 
-
 def json_response(res):
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')
