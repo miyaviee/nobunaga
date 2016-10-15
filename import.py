@@ -16,7 +16,7 @@ def save(con, t, word, answer):
 
         tokens = t.tokenize(word)
         for token in tokens:
-            if not re.search(u'名詞|動詞,自立', token.part_of_speech):
+            if not is_target(token):
                 continue
 
             exist = False
@@ -36,6 +36,15 @@ def save(con, t, word, answer):
             con.commit()
 
     return True
+
+def is_target(token):
+    if re.search(u'名詞|動詞,自立', token.part_of_speech):
+        return True
+
+    if re.search(u'ついて', token.surface):
+        return True
+
+    return False
 
 def db_reset(con):
     with con.cursor() as cur:

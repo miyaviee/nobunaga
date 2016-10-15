@@ -17,7 +17,7 @@ class Base(object):
         data = []
 
         for token in tokens:
-            if not re.search(u'名詞|動詞,自立', token.part_of_speech):
+            if not self.is_target(token):
                 continue
 
             string.append('keyword = %s AND type = %s')
@@ -28,6 +28,15 @@ class Base(object):
             'string': string,
             'data': data,
         }
+
+    def is_target(self, token):
+        if re.search(u'名詞|動詞,自立', token.part_of_speech):
+            return True
+
+        if re.search(u'ついて', token.surface):
+            return True
+
+        return False
 
     def search(self, query):
         with self.db.cursor() as cur:
