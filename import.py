@@ -16,7 +16,7 @@ def save(con, t, word, answer):
 
         tokens = t.tokenize(word)
         for token in tokens:
-            if not re.search(u'名詞', token.part_of_speech):
+            if not re.search(u'名詞|動詞,自立', token.part_of_speech):
                 continue
 
             exist = False

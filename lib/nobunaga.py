@@ -13,20 +13,12 @@ class Nobunaga(Base):
             }
 
         if result[2] < 2:
-            for token in self.parse(result[0]):
-                if re.search(u'固有名詞', token.part_of_speech):
-                    target = token.surface
-                    break
-
-            try:
-                _var = target
-            except:
-                message = u'何のことだ？'
-                self.logging('info', word, message)
-                return {
-                    'error': True,
-                    'message': message,
-                }
+            message = u'何のことだ？'
+            self.logging('info', word, message)
+            return {
+                'error': True,
+                'message': message,
+            }
 
         message = result[0]
         self.logging('info', word, message)

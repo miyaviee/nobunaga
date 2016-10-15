@@ -3,6 +3,7 @@
 from flask import Flask, jsonify, request
 from flaskext.mysql import MySQL
 from lib.nobunaga import Nobunaga
+from janome.tokenizer import Tokenizer
 import yaml
 
 app = Flask(__name__)
@@ -18,6 +19,8 @@ mysql.init_app(app)
 
 app.config['JSON_AS_ASCII'] = False
 
+tokenizer = Tokenizer()
+
 @app.route("/favicon.ico")
 def favicon():
     return app.send_static_file("favicon.ico")
@@ -32,9 +35,9 @@ def log(word = None):
 
 @app.route('/<message>', methods = ['GET'])
 def index(message = None):
-    nobunaga = Nobunaga(mysql)
+    nobunaga = Nobunaga(mysql, tokenizer)
     tokens = nobunaga.parse(message)
-    query = nobunaga.create_query(tokens)
+    query = nobunaga.query(tokens)
     result = nobunaga.search(query)
 
     return json_response(nobunaga.answer(message, query, result))

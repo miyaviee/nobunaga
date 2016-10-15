@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 
-from janome.tokenizer import Tokenizer
 import re
 import os
 import datetime
 
 class Base(object):
-    def __init__(self, driver):
-        self.t = Tokenizer()
+    def __init__(self, driver, tokenizer):
+        self.t = tokenizer
         self.db = driver.connect()
 
     def parse(self, word):
         return self.t.tokenize(word)
 
-    def create_query(self, tokens):
+    def query(self, tokens):
         string = []
         data = []
 
         for token in tokens:
-            if not re.search(u'名詞', token.part_of_speech):
+            if not re.search(u'名詞|動詞,自立', token.part_of_speech):
                 continue
 
             string.append('keyword = %s AND type = %s')
