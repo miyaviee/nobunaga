@@ -116,29 +116,21 @@ class Nobunaga(object):
 
         self.db.commit()
 
-    def all(self):
+    def showlog(self, word):
+        if word is None:
+            word = ''
+
         with self.db.cursor() as cur:
             sql = """
             SELECT *
             FROM log
+            WHERE line LIKE %s
             ORDER BY line DESC
             """[1:-1]
-            cur.execute(sql)
+
+            cur.execute(sql, '%' + word + '%')
 
             results = cur.fetchall()
 
-        return results
+        return list(map(lambda r: r[0], results))
 
-    def error(self):
-        with self.db.cursor() as cur:
-            sql = """
-            SELECT *
-            FROM log
-            WHERE line LIKE '%error%'
-            ORDER BY line DESC
-            """[1:-1]
-            cur.execute(sql)
-
-            results = cur.fetchall()
-
-        return results

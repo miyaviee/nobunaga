@@ -22,17 +22,11 @@ app.config['JSON_AS_ASCII'] = False
 def favicon():
     return app.send_static_file("favicon.ico")
 
-@app.route("/log/all")
-def all():
+@app.route("/log")
+@app.route("/log/<word>")
+def log(word = None):
     nobunaga = Nobunaga(mysql)
-    res = nobunaga.all()
-
-    return json_response(res)
-
-@app.route("/log/error")
-def error():
-    nobunaga = Nobunaga(mysql)
-    res = nobunaga.error()
+    res = nobunaga.showlog(word)
 
     return json_response(res)
 
