@@ -2,7 +2,7 @@
 
 from flask import Flask, jsonify, request
 from flaskext.mysql import MySQL
-from nobunaga import Nobunaga
+from lib.nobunaga import Nobunaga
 import yaml
 
 app = Flask(__name__)
