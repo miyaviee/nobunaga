@@ -22,7 +22,7 @@ class Nobunaga(Base):
 
             return {
                 'error': True,
-                'message': u'わからぬな',
+                'message': u'何といえばよいか・・・',
             }
 
         return {
