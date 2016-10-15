@@ -17,7 +17,7 @@ class Base(object):
         data = []
 
         for token in tokens:
-            if not self.is_target(token):
+            if not re.search(u'名詞|動詞,自立', token.part_of_speech):
                 continue
 
             string.append('keyword = %s AND type = %s')
@@ -28,15 +28,6 @@ class Base(object):
             'string': string,
             'data': data,
         }
-
-    def is_target(self, token):
-        if re.search(u'名詞|動詞,自立', token.part_of_speech):
-            return True
-
-        if re.search(u'ついて', token.surface):
-            return True
-
-        return False
 
     def search(self, query):
         with self.db.cursor() as cur:
@@ -51,7 +42,11 @@ class Base(object):
 
             return cur.fetchone()
 
-    def logging(self, level, word, message):
+    def logging(self, error, word, message):
+        level = 'info'
+        if error:
+            level = 'error'
+
         date = datetime.datetime.today()
         with self.db.cursor() as cur:
             sql = """

@@ -28,7 +28,7 @@ def favicon():
 @app.route("/log")
 @app.route("/log/<word>")
 def log(word = None):
-    nobunaga = Nobunaga(mysql)
+    nobunaga = Nobunaga(mysql, tokenizer)
     res = nobunaga.showlog(word)
 
     return json_response(res)
@@ -39,8 +39,10 @@ def index(message = None):
     tokens = nobunaga.parse(message)
     query = nobunaga.query(tokens)
     result = nobunaga.search(query)
+    res = nobunaga.answer(message, query, result)
+    nobunaga.logging(res['error'], message, res['message'])
 
-    return json_response(nobunaga.answer(message, query, result))
+    return json_response(res)
 
 def json_response(res):
     response = jsonify(res)
