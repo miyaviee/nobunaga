@@ -10,7 +10,7 @@ class Nobunaga(Base):
                 'message': u'うっ！頭が・・・思い出せぬ・・・',
             }
 
-        if result[2] < 2 and not re.search(u'ついて', word):
+        if result[2] < 3 and not re.search(u'ついて', word):
             for token in self.t.tokenize(word):
                 if not re.search(u'固有名詞', token.part_of_speech):
                     continue

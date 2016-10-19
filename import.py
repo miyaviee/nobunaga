@@ -31,7 +31,7 @@ def save(con, t, word, answer):
             cur.execute('INSERT INTO nobunaga ('
                         'keyword, type, token_count, answer) '
                         'VALUES (%s, %s, %s, %s)',
-                        (token.surface, token.part_of_speech, len(tokens), answer))
+                        (token.reading, token.part_of_speech, len(tokens), answer))
 
             con.commit()
 

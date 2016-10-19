@@ -21,7 +21,7 @@ class Base(object):
                 continue
 
             string.append('keyword = %s AND type = %s')
-            data.append(token.surface)
+            data.append(token.reading)
             data.append(token.part_of_speech)
 
         return {
