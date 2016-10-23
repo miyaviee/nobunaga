@@ -26,14 +26,21 @@ class Nobunaga(Base):
             }
 
         if result[2] == 2:
+            cnt = 0
             for token in self.t.tokenize(word):
-                if re.search(u'固有名詞', token.part_of_speech):
-                    break
+                if re.search(u'名詞', token.part_of_speech):
+                    cnt += 1
+                    continue
 
-            return {
-                'error': True,
-                'message': u'何のことだ？',
-            }
+                if re.search(u'動詞,自立', token.part_of_speech):
+                    cnt += 1
+                    continue
+
+            if cnt != 2:
+                return {
+                    'error': True,
+                    'message': u'何のことだ？',
+                }
 
         return {
             'error': False,
