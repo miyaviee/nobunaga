@@ -2,6 +2,7 @@
 
 from lib.base import Base, re
 
+
 class Nobunaga(Base):
     def answer(self, word, query, result):
         if result is None:
@@ -51,4 +52,3 @@ class Nobunaga(Base):
                 'query': query,
             },
         }
-

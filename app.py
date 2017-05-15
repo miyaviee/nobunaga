@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from flaskext.mysql import MySQL
 from lib.nobunaga import Nobunaga
 from janome.tokenizer import Tokenizer
@@ -21,20 +21,23 @@ app.config['JSON_AS_ASCII'] = False
 
 tokenizer = Tokenizer()
 
+
 @app.route("/favicon.ico")
 def favicon():
     return app.send_static_file("favicon.ico")
 
+
 @app.route("/log")
 @app.route("/log/<word>")
-def log(word = None):
+def log(word=None):
     nobunaga = Nobunaga(mysql, tokenizer)
     res = nobunaga.showlog(word)
 
     return json_response(res)
 
-@app.route('/<message>', methods = ['GET'])
-def index(message = None):
+
+@app.route('/<message>', methods=['GET'])
+def index(message=None):
     nobunaga = Nobunaga(mysql, tokenizer)
     tokens = nobunaga.parse(message)
     query = nobunaga.query(tokens)
@@ -44,10 +47,12 @@ def index(message = None):
 
     return json_response(res)
 
+
 def json_response(res):
     response = jsonify(res)
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 
+
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0', port = 5000)
+    app.run(host='0.0.0.0', port=5000)

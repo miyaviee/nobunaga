@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import re
-import os
 import datetime
+
 
 class Base(object):
     def __init__(self, driver, tokenizer):
@@ -53,7 +53,9 @@ class Base(object):
             INSERT INTO log
             VALUES (%s)
             """[1:-1]
-            cur.execute(sql, '%s, %s, %s, %s' % (date.strftime('%Y/%m/%d %H:%M:%S'), level, word, message))
+            time = date.strftime('%Y/%m/%d %H:%M:%S')
+            values = '%s, %s, %s, %s' % (time, level, word, message)
+            cur.execute(sql, values)
 
         self.db.commit()
 
@@ -74,4 +76,3 @@ class Base(object):
             results = cur.fetchall()
 
         return list(map(lambda r: r[0], results))
-
